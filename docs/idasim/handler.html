@@ -1,0 +1,84 @@
+<html>
+	<head>
+		<title>IDASimFunctionHandler</title>
+
+		<style>
+			h4 { margin-left: 20px; };
+		</style>
+	</head>
+	<body>
+		<h2>class IDASimFunctionHandler:</h2>
+
+		<h4>def __init__(self, idbm, name=None, verbose=False)</h4>
+		<p>
+		<blockquote>
+		<pre>
+	Class constructor.
+
+	@idbm    - Instance of <a href="mmu.html">IDASimMMU</a>.
+	@name    - Name that will be assigned to the class instance.
+	@verbose - Enable verbose mode.
+
+	Returns None.
+		</pre>
+		</blockquote>
+		</p>
+	
+		<h4>def RegisterHandler(self, name, handler, stubs=True)</h4>
+		<p>
+		<blockquote>
+		<pre>
+	Registers a given function handler for a given function name.
+
+	@name    - Name of the function.
+	@handler - The function handler to call.
+	@stubs   - If True, handle calls to both extern and stub addresses.
+
+	Returns True on success, False on failure.
+		</blockquote>
+		</pre>
+		</p>
+
+		<h4>def RegisterHandlers(self, handlers, stubs=True)</h4>
+		<p>
+		<blockquote>
+		<pre>
+	Registers a set of function handlers.
+
+	@handlers - A dictionary consisting of 'name':handler pairs.
+	@stubs   - If True, handle calls to both extern and stub addresses.
+                
+	Returns the number of handlers successfully registered.
+		</pre>
+		</blockquote>
+		</p>
+
+		<h4>def UnregisterHandler(self, name, stubs=True)</h4>
+		<p>
+		<blockquote>
+		<pre>
+	Removes a function handler by name.
+
+	@name  - The name of the function handler to be removed.
+	@stubs - If True, corresponding function stub handlers that were automatically created by RegisterHandler will also be removed.
+
+	Returns None.
+		</pre>
+		</blockquote>
+		</p>
+
+		<h4>def UnregisterHandlers(self, purge=False)</h4>
+		<p>
+		<blockquote>
+		<pre>
+	Deletes breakpoints for all registered handlers.
+
+	@purge - If True, removes all handlers for all instances of IDASimFunctionHandler.
+	         If False, only handlers for this instance of IDASimFunctionHandler will be removed.
+
+	Returns None.
+		</pre>
+		</blockquote>
+		</p>
+	</body>
+</html>

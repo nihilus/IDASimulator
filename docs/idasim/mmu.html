@@ -1,0 +1,64 @@
+<html>
+	<head>
+		<title>IDASimMMU</title>
+
+		<style>
+			h4 { margin-left: 20px; };
+		</style>
+	</head>
+	<body>
+		<h2>class IDASimMMU:</h2>
+
+		<h4>def __init__(self, base=None)</h4>
+		<p>
+		<blockquote>
+		<pre>
+	Class constructor.
+
+	@base - Specify the base address to start at when allocating memory. Will be auto-detected if not specified.
+
+	Returns None.
+		</pre>
+		</blockquote>
+		</p>
+	
+		<h4>def reset(self)</h4>
+		<p>
+		<blockquote>
+		<pre>
+	Resets the current memory allocation pointer to the base memory allocation address.
+	Called automatically when the debugger is started/stopped.
+
+	Returns None.
+		</blockquote>
+		</pre>
+		</p>
+
+		<h4>def base(self, base=None)</h4>
+		<p>
+		<blockquote>
+		<pre>
+	Sets the base memory allocation address.
+	
+	@base - Specify the base address to start at when allocating memory.
+	
+	Returns None.
+		</pre>
+		</blockquote>
+		</p>
+
+		<h4>def malloc(self, data=None, size=0)</h4>
+		<p>
+		<blockquote>
+		<pre>
+	Allocates space for data in the debugger's memory and populates it.
+        
+	@data - Data to place into memory. If None, NULL bytes will be used.
+	@size - Size of memory to allocate. If 0, len(data) bytes will be allocated.
+        
+	Returns the address of the allocated memory.
+		</pre>
+		</blockquote>
+		</p>
+	</body>
+</html>

@@ -1,0 +1,240 @@
+<html>
+	<head>
+		<title>IDASim</title>
+
+		<style>
+			h4 { margin-left: 20px; };
+		</style>
+	</head>
+	<body>
+		<h2>class IDASim:</h2>
+		
+		<h4>def __init__(self, handlers={}, debug=False, attach=False, membase=None)</h4>
+		<p>
+		<blockquote>
+		<pre>
+	Class constructor.
+
+	@handlers  - A dict of function names/addresses to simulate and their corresponding handlers.
+	@debug     - Set to True to automatically start debugging.
+	@attach    - Set to True to attach to a process, rather than directly running the debugger.
+	@membase   - Specify the base address to start at when allocating memory.
+
+	Returns None.
+		</pre>
+		</blockquote>
+		</p>
+	
+		<h4>def WaitForDebugger(self)</h4>
+		<p>
+		<blockquote>
+		<pre>
+	Waits for the debugger event (WFNE_CONT | WFNE_SUSP).
+	Called internally by StartDebugger and AttachDebugger.
+
+	Returns None.
+		</blockquote>
+		</pre>
+		</p>
+
+		<h4>def StartDebugger(self)</h4>
+		<p>
+		<blockquote>
+		<pre>
+	Starts the debugger (equivalent of pressing F9).
+	Called internally by __init__ if debug=True.
+
+	Returns None.
+		</pre>
+		</blockquote>
+		</p>
+
+		<h4>def AttachDebugger(self, pid=-1)</h4>
+		<p>
+		<blockquote>
+		<pre>
+	Attaches the debugger to a running process.
+	Called internally by __init__ if attach=True
+
+	@pid - The PID of the process to attach to (user will be prompted if not specified).
+
+	Returns None.
+		</pre>
+		</blockquote>
+		</p>
+
+		<h4>def vsprintf(self, fmt, index)</h4>
+		<p>
+		<blockquote>
+		<pre>
+	Formats format strings.
+
+	@fmt   - The format string.
+	@index - The index of the function argument containing the first format string argument (0-based).
+
+	Returns a formatted string.
+		</pre>
+		</blockquote>
+		</p>
+
+		<h4>def GetArguments(self, index, n)</h4>
+		<p>
+		<blockquote>
+		<pre>
+	Get a list of function arguments. Any valid string pointers will be converted to strings.
+
+	@index - First argument index, 0-based.
+	@n     - The number of arguments to retrieve.
+
+	Returns a list of n arguments.
+		</pre>
+		</blockquote>
+		</p>
+
+		<h4>def Malloc(self, data=None, size=0)</h4>
+		<p>
+		<blockquote>
+		<pre>
+	Allocates space in the debugger's memory.
+
+	@data - Fill the allocated space with this data.
+	@size - If data is None, allocate and zero out size bytes of memory.
+
+	Returns the address of the allocated memory.
+		</pre>
+		</blockquote>
+		</p>
+
+		<h4>def ARGV(self, argv)</h4>
+		<p>
+		<blockquote>
+		<pre>
+	Allocates space for an argv data structure.
+
+	@argv - A list of argv strings.
+
+	Returns the address of the argv array of pointers.
+		</pre>
+		</blockquote>
+		</p>
+
+		<h4>def String(self, string, raw=False)</h4>
+		<p>
+		<blockquote>
+		<pre>
+	Creates a NULL-terminated string in the debugger's memory.
+
+	@string - The string, or list of strings, to place into memory.
+	@raw    - If set to True, the string will not be NULL terminated.
+
+	Returns the address, or list of addresses, of the string(s) in memory.
+		</pre>
+		</blockquote>
+		</p>
+
+		<h4>def Int(self, value, size)</h4>
+		<p>
+		<blockquote>
+		<pre>
+	Creates an integer value of size bytes in the debugger's memory.
+
+	@value - The integer value, or list of values, to place into memory.
+	@size  - The size of the interger value(s), in bytes.
+
+	Returns the address, or a list of addresses, of the integer(s) in memory.
+		</pre>
+		</blockquote>
+		</p>
+
+		<h4>def DoubleWord(self, dword)</h4>
+		<p>
+		<blockquote>
+		<pre>
+	Places an 8 byte integer into the debugger's memory.
+
+	@dword - The 8 byte register value, or list of values, to place into memory.
+
+	Returns the address, or a list of addresses, of the dword(s) in memory.
+		</pre>
+		</blockquote>
+
+		<h4>def Word(self, word)</h4>
+		<p>
+		<blockquote>
+		<pre>
+	Places a four byte integer into the debugger's memory.
+
+	@word - The four byte integer value, or list of values, to place into memory.
+
+	Returns the address, or a list of addresses, of the word(s) in memory.
+		</pre>
+		</blockquote>
+		</p>
+
+		<h4>def HalfWord(self, hword)</h4>
+		<p>
+		<blockquote>
+		<pre>
+	Places two bytes of data into the debugger's memory.
+
+	@hword - The two byte value, or list of values, to place into memory.
+
+	Returns the address, or a list of addresses, of the half word(s) in memory.
+		</pre>
+		</blockquote>
+		</p>
+
+		<h4>def Byte(self, byte)</h4>
+		<p>
+		<blockquote>
+		<pre>
+	Places one byte of data into the debugger's memory.
+                
+	@byte - The byte value, or list of values, to place into memory.
+                
+	Returns the address, or a list of addresses, of the byte(s) in memory.
+		</pre>
+		</blockquote>
+		</p>
+		
+		<h4>def Cleanup(self)</h4>
+		<p>
+		<blockquote>
+		<pre>
+	Removes all registered function simulation hooks.
+
+	Returns None.
+		</pre>
+		</blockquote>
+		</p>
+
+		<h4>self.mmu</h4>
+		<p>
+		<blockquote>
+		<pre>
+	Instance of the <a href="mmu.html">IDASimMMU</a> class.
+	This instance must be used for all direct IDASimMMU method calls.
+		</pre>
+		</blockquote>
+		</p>
+
+		<h4>self.cpu</h4>       
+		<p>             
+		<blockquote>            
+		<pre>           
+	Instance of the <a href="architecture.html">Architecture</a> class.
+		</pre>          
+		</blockquote>           
+		</p>
+
+		<h4>self.FunctionHandler</h4>
+		<p>
+		<blockquote>
+		<pre>
+	Instance of the <a href="handler.html">IDASimFunctionHandler</a> class.
+	This instance must be used for all direct IDASimFunctionHandler method calls.
+		</pre>
+		</blockquote>
+		</p>
+	</body>
+</html>

@@ -1,0 +1,288 @@
+<html>
+	<head>
+		<title>IDASim User Guide</title>
+		<link rel="stylesheet" type="text/css" href="../css/style.css">
+	</head>
+
+	<body>
+
+		<h1>Introduction</h1>
+		<div id="intro">
+			<p>
+				IDASim is an IDAPython module that supports simple simulation / replacement of executable code
+				with Python code.
+				Pesky details such as allocating memory space for strings and data, accessing function arguments, 
+				and setting return values are all handled by IDASim.
+			</p>
+
+			<p>
+				IDASim is especially useful for:
+
+				<ul>
+					<li>Simulating library function calls when emlating <a href="http://www.hex-rays.com/products/ida/support/idadoc/1588.shtml">code snippets</a> in IDA</li>
+					<li>Simulating function calls that fail on your machine due to <a href="http://www.devttys0.com/2012/03/emulating-nvram-in-qemu/">missing/incorrect hardware</a> or variations in environments</li>
+					<li>Easily changing the functionality of a code block by dynamically modifying registers / memory values</li>
+				</ul>
+			</p>
+
+			<hr />
+		</div>
+
+		<h1>Using IDASim</h1>
+		<div id="usage">
+			<p>
+				To use IDASim, you must:
+
+				<ol>
+					<li>Import the idasim Python module</li>
+					<li>Create function handlers to replace existing functions in the running process</li>
+					<li>Instantiate the <a href="idasim.html">IDASim</a> class object</li>
+				</ol>
+			</p>
+		<!--	<hr /> -->
+			
+			<h2>Simulating Functions</h2>
+			<p>
+				Suppose we have a target binary which contains the following internal function:
+			
+				<blockquote>
+				<pre>
+		<span class="green">void</span> trace(<span class="green">int</span> trace_level, <span class="green">char</span> *format_string, ...);
+				</pre>
+				</blockquote>
+
+				This function is used to display dynamically generated debug information, and is called repeatedly throughout 
+				the code. However, the contents of this function were #defined out during the production build of our target, 
+				so none of this information ever gets displayed. We can change that:
+
+				<blockquote>
+				<pre>
+		<span class="purple">from</span> idasim <span class="purple">import</span> *
+
+		<span class="gold">def</span> <span class="aqua">mytrace</span>(trace_level, format_string=<span class="red">''</span>):
+			<span class="aqua">print</span> sim.vsprintf(format_string, <span class="red">2</span>)
+			<span class="gold">return</span> <span class="red">0</span>
+
+		sim = IDASim(handlers={<span class="red">'trace'</span> : mytrace})
+				</pre>
+				</blockquote>
+
+				Here, we've told IDASim that we want all calls to the function named 'trace' redirected to our handler function, mytrace().
+				Note that <span class="red">the class instace must be assigned a global name</span>, in this case 'sim', even if it is not 
+				subsequently referenced by your script.
+				<br /><br />
+
+				The mytrace handler defines the first two arguments for the function (the rest are obviously variable arguments): trace_level 
+				and format_string. Since we know that the second argument, format_string, will be a pointer to a NULL-terminated string, we've 
+				defined the default value for format_string as a string type. This means that instead of being passed the raw value for the 
+				format_string argument (a pointer to the NULL-terminated format string), the actual format string will be passed to mytrace.
+				<br /><br />
+
+				Format string parsing can typically be handled by the built in IDASim.vsprintf() method. We pass the format_string as the first argument to
+				IDASim.vsprintf(), and also tell it that the format string arguments start at function argument index 2 (i.e., the third argument
+				to the trace function will be the first format string argument).
+				<br /><br />
+
+				IDASim.vsprintf() will return the formatted string, so we simply print that out to the IDA console and return 0. The
+				return register will be automatically populated with our return value, and execution of the process will jump back
+				to the return address specified by the caller.
+			</p>
+		<!--	<hr /> -->
+
+			<h2 id="handlers">Returning String/Data Pointers</h2>
+			<p>
+				What about handlers that need to return string/data pointers? Let's see what would be needed to simulate libc's strdup():
+
+				<blockquote>
+				<pre>
+		<span class="gold">def</span> <span class="aqua">mystrdup</span>(string=<span class="red">''</span>):
+			<span class="gold">return</span> string + <span class="red">"\x00"</span>
+				</pre>
+				</blockquote>
+
+				When a handler returns a string type, that string data gets placed into the running process's memory, the return
+				register is populated with a pointer to the data, and process execution is transferred back to the caller's return address.
+				<br /><br />
+
+				Note that since strdup() needs to return a NULL terminated string, the handler function needs to ensure that a NULL byte 
+				is placed at the end of the string that it returns.
+			</p>
+		<!--	<hr /> -->
+
+			<h2>Controlling Execution Flow</h2>
+			<p>
+				OK, but what if we only want to simulate a function under specific circumstances? Each function handler can control if the
+				original function is executed or not. If a handler returns None, nothing further is done and the process continues execution normally:
+
+				<blockquote>
+				<pre>
+		<span class="gold">def</span> <span class="aqua">myhandler</span>():
+			<span class="gold">if</span> sim.cpu.ReturnAddress() == <span class="red">0x0040BAAD</span>:
+				<span class="gold">return</span> <span class="aqua">None</span>
+			<span class="gold">else</span>:
+				<span class="gold">return</span> <span class="red">0</span>
+				</blockquote>
+				</pre>
+			</p>
+
+			<p>
+				Handlers can also directly control where the process continues its execution from by raising a JumpTo or GoTo exception:
+
+				<blockquote>
+				<pre>
+		<span class="gold">def</span> <span class="aqua">gotohandler</span>():
+			<span class="gold">raise</span> GoTo(<span class="red">0x0040BAAD</span>)
+
+		<span class="gold">def</span> <span class="aqua">jumptohandler</span>():
+			<span class="gold">raise</span> JumpTo(<span class="red">8</span>)
+				</pre>
+				</blockquote>
+
+				In the above example, gotohandler() causes process execution to continue from the address 0x0040BAAD. By contrast, jumptohandler()
+				causes the process execution to continue from the current program counter address plus 8 bytes.
+			</p>
+		<!--	<hr /> -->
+
+			<h2>Starting the Debugger</h2>
+			<p>
+				If the debug or attach arguments to IDASim() are set to true, the IDASim class constructor will respectively attempt to automatically 
+				start the debugger or attach to a remote debugger before returning:
+	
+				<blockquote>
+				<pre>
+		sim = IDASim(debug=<span class="aqua">True</span>)
+		sim = IDASim(attach=<span class="aqua">True</span>)
+				</pre>
+				</blockquote>
+
+				This is especially useful if you wish to automate the initialization of memory / registers before debugging the target process.
+				The IDASim class provides various methods for allocating strings, integers, or raw data in process memory. As an example, let's
+				use IDASim to configure the argc and argv arguments when running the main() function of a target binary as a code snippet:
+
+				<blockquote>
+				<pre>
+		sim = IDASim(debug=<span class="aqua">True</span>)
+		sim.cpu.Argument(<span class="red">0</span>, value=<span class="red">2</span>)
+		sim.cpu.Argument(<span class="red">1</span>, value=sim.ARGV([<span class="red">'./foo'</span>, <span class="red">'bar'</span>]))
+				</pre>
+				</blockquote>
+
+				This uses the Architecture.Argument() method for setting the values of the main function's first argument (argc) and second argument (argv).
+				Note that the special IDASim.ARGV() method is used for allocating space for the argv strings and generating an array of pointers to 
+				those strings.
+			</p>
+		<!--	<hr /> -->
+
+			<h2 id="mmu">Memory Management</h2>
+			<p>
+				The IDASim class provides various methods for allocating data in process memory. Strings, integers and raw data can be placed directly
+				into process memory using the following methods (where applicable, endianess is handled automatically):
+
+				<blockquote>
+				<pre>
+		sim.String(<span class="red">"Put this string in memory and ensure it is NULL terminated."</span>)
+		sim.Word(<span class="red">0x0040BAAD</span>)
+		sim.HalfWord(<span class="red">0xBAAD</span>)
+		sim.Byte(<span class="red">0xAD</span>)
+		sim.Malloc(<span class="red">"\x00\x01\x02\x03\x04\x05"</span>)
+				</pre>
+				</blockquote>
+
+				When allocating space for strings / data, IDASim needs to have some memory available where it can place data without interfering with
+				the memory used by the running process. By default, IDASim looks for a segment of memory named 'MMU' to use. If this does not exist
+				it looks to see if the last segment of memory is named 'MEMORY' or 'RAM', and if so, uses that. Else, it will begin allocating data 
+				from the bottom of the stack segment. If this also fails, it will default to using a base address of 0x100000.
+				<br /><br />
+				While this usually works fine, you may need to explicitly specify a memory segment to use in order to ensure data integrity. This can be 
+				done by defining a memory segment named 'MMU', or by passing the start address to use for data storage to the IDASim class constructor:
+
+				<blockquote>
+				<pre>
+		sim = IDASim(membase=<span class="red">0x0040BAAD</span>)
+				</pre>
+				</blockquote>
+			</p>
+			<hr />
+			
+		</div>
+
+		<h1 id="porting">Porting</h1>
+		<div id="ports">
+			<p>
+				 To add support for a new architecture, add a new entry to the Architecture.ARCH dictionary:
+
+				<blockquote>
+				<pre>
+		ARCH = {
+
+			...
+	
+			<span class="blue"># Dictionary key is the architecture name</span>
+			<span class="red">'mips'</span>  : {
+				<span class="blue"># Offset from the stack pointer where function arguments start</span>
+				<span class="red">'spoffset'</span>      : <span class="red">0x10</span>,
+				<span class="blue"># Registers used to pass function arguments</span>
+				<span class="red">'argreg'</span>        : [<span class="red">'a0'</span>, <span class="red">'a1'</span>, <span class="red">'a2'</span>, <span class="red">'a3'</span>],
+				<span class="blue"># Register(s) used to store function return values</span>
+				<span class="red">'retval'</span>        : [<span class="red">'v0'</span>, <span class="red">'v1'</span>],
+				<span class="blue"># Name of the stack pointer register</span>
+				<span class="red">'sp'</span>            : <span class="red">'sp'</span>,
+				<span class="blue"># Name of the return address register</span>
+				<span class="red">'ra'</span>            : <span class="red">'ra'</span>,
+				<span class="blue"># Name of the program counter register</span>
+				<span class="red">'pc'</span>            : <span class="red">'pc'</span>,
+			},
+	
+			...
+		}
+				</pre>
+				</blockquote>
+
+				Note that any of the required values can be specified as pointer values if necessary. For example, in x86, the return
+				address is not stored in a register, but rather pushed onto the stack such that the stack pointer register points
+				to the return address on the stack at the beginning of any function. Thus, the value for the 'ra' key can be specified
+				as '*ESP', indicating that the ESP register contains a pointer to the memory location where the return address is located.
+				<br /><br />
+
+				If your target architecture is supported but your specific target processor is not supported, all
+				that is required is to add a new entry to Architecture.PROCESSORS dictionary:
+
+				<blockquote>
+				<pre>
+		PROCESSORS = {
+
+			...
+
+			<span class="blue"># Dictionary key is the name of the IDA processory module</span>
+			'mipsl' : [{
+				<span class="blue"># The architecture key value, as specified in Architecture.ARCH</span>
+				<span class="red">'architecture'</span>  : <span class="red">'mips'</span>,
+				<span class="blue"># The endianess of this processor module, one of: 'little', 'big'</span>
+				<span class="red">'endianess'</span>     : <span class="red">'little'</span>,
+				<span class="blue"># The default bus width of this processory module</span>
+				<span class="red">'bits'</span>          : <span class="red">32</span>
+			}],
+
+			...
+		}
+				</blockquote>
+				</pre>
+			</p>
+			<hr />
+		</div>
+
+		<h1>Class Definitions</h1>
+		<div id="classes">
+			<p>
+				<ul>
+					<li><a href="idasim.html">IDASim</a></li>
+					<li><a href="architecture.html">Architecture</a></li>
+					<li><a href="mmu.html">IDASimMMU</a></li>
+					<li><a href="handler.html">IDASimFunctionHandler</a></li>
+				</ul>
+			</p>
+			<hr />
+		</div>
+	</body>
+</html>
+

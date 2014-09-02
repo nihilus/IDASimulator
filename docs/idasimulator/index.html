@@ -1,0 +1,261 @@
+<html>
+	<head>
+		<title>IDASimulator User Guide</title>
+		<link rel="stylesheet" type="text/css" href="../css/style.css">
+	</head>
+
+	<body>
+
+		<h1>Introduction</h1>
+		<div id="intro">
+			<p>
+			IDASimulator is a plugin that allows IDA users to easily augment / replace executable code inside a debugged process with Python code.
+			</p>
+
+			<p>
+			Specifically, IDASimulator makes use of conditional breakpoints in the IDA debugger to hijack the execution flow of a process
+			and invoke Python handler functions whenever particular code blocks are executed. With support for multiple target architectures,
+			it handles details such as register initialization, memory allocation, pointers, function arguments and return values seamlessly 
+			and transparently, making it easy to replace, modify and subvert existing functionality (or lack thereof) in the target process.
+			</p>
+
+			<p>
+			IDASimulator currently supports the x86, x86_64, ARM and MIPS32 architectures. <a href="../idasim/index.html#porting">Porting</a> to other architectures is very easy.
+			</p>
+			<hr />
+		</div>
+
+		<h1 id="install">Installation</h1>
+		<div id="installation">
+			<p>
+			The IDASimulator plugin and its associated IDASim python module can be installed with the install.py script:
+
+			<blockquote>
+			<pre>
+	$ python install.py /path/to/ida/install/directory
+			</pre>
+			</blockquote>
+			</p>
+			<hr />
+		</div>
+
+		<h1>Using IDASimulator</h1>
+		<div id="usage">
+			<p>
+			The IDASimulator plugin can be activated through the plugins menu, or by pressing the Alt+0 hotkey:
+			</p>
+
+			<p>
+			<img src="images/start_idasimulator.png" />
+
+			<p>
+			The IDASimulator window displays all of the named locations in the current IDB that it has handlers for:
+			</p>
+
+			<p>
+			<img src="images/activate_plugin.png" />
+			</p>
+
+			<p>
+			Double-clicking on an entry will enable/disable the selected handler:
+			</p>
+
+			<p>
+			<img src="images/activate_handler.png" />
+			</p>
+
+			<p>
+			The right-click menu in the IDASimulator window provides a variety of additional options:
+			</p>
+
+			<p>
+			<img src="images/right_click_menu.png" />
+			</p>
+
+			<p>
+			The <em>Enable/disable selected handlers</em> option is synonymous with double-clicking on a handler, as described above.
+			</p>
+
+			<p>
+			The <em>Enable all handlers</em> and <em>Disable all handlers</em> options will respecitvely enable or disable all displayed handlers.
+			</p>
+
+			<p>
+			The <em>Reset to defaults</em> option will remove all changes you have made and disable all handlers.
+			</p>
+
+			<p>
+			The <em>Show / hide unsupported imports</em> option displays or hides all imports that do not have associated IDASimulator handlers.
+			</p>
+
+			<p>
+			The <em>Jump to selected name</em> option will take you to the location of the selected name in IDA's disassembly window.
+			</p>
+	
+			<p>
+			The <em>Save settings</em> option saves all of the current IDASimulator settings for that IDB. This is also done automatically whenever the IDASimulator
+			window is closed.
+			</p>
+
+			<p>
+			The <em>Quit</em> option will save the current settings and disable the IDASimulator plugin (just closing the IDASimulator window does not disable the plugin).
+			</p>
+
+			<p>The <em>Set MMU base address</em> option allows you to manually control the start address of where IDASimulator handler data (such as strings)
+			is allocated in memory. This is normally <a href="../idasim/index.html#mmu">auto-detected</a>, but in some cases may need to be explicitly controlled:
+			<p>
+
+			<p>
+			<img src="images/membase.png" />
+			</p>
+
+			<p>
+			The <em>Set initialization values</em> option allows you to define the initialization values of registers and define python statements, 
+			as well as control when those initializations are exercised. By default, they will be invoked when the debugger is started/attached:
+			</p>
+
+			<p>
+			<img src="images/register_config_defaults.png" />
+			</p>
+
+			<p>
+			When process execution reaches the specified named location, the specified settings will be applied:
+			</p>
+
+			<p>
+			<img src="images/register_config_main.png" />
+			</p>
+
+			<p>
+			Note that if the location named in the Initialization Configuration conflicts with a handler name, the handler for that
+			named location will be removed and replaced with the Initialization Configuration handler.
+			</p>
+
+			<p>
+			Up to ten registers may be specified. Their values may be assigned an integer value (decimal or hexadecimal), a quoted string value (the string will 
+			be allocated in memory and the register will be populated with the address of the string), or as the result of an 
+			<a href="../idasim/idasim.html">IDASim</a> or <a href="../idasim/architecture.html">Achitecture</a> method call:
+			</p>
+
+			<p>
+			<img src="images/registers_configured.png" />
+			</p>
+
+			<p>
+			Valid Python expressions may also be included in the register assignment:
+			</p>
+
+			<p>
+			<img src="images/register_config_expression.png" />
+			</p>
+
+			<p>
+			And if no register is specified, arbitrary Python statements may be entered into the value field:
+			</p>
+
+			<p>
+			<img src="images/python_expression.png" />
+			</p>
+
+			<hr />
+		</div>
+
+		<h1>Command Line</h1>
+		<div id="cmdline">
+			<p>
+			When the IDASimulator plugin is activated, it creates a global instance of the <a href="../idasim/idasim.html">IDASim</a> class named 'IDASIM'. 
+			This global class instance is available for use in any IDAPython statement, and can be invoked manually from the command line during a debugging session:
+			</p>	
+
+			<p>
+			<img src="images/idasimulator_command_line.png" />
+			</p>
+
+			<p>
+			IDAPython scripts invoked while the IDASimulator plugin is active should use the IDASIM class instance rather than creating a new class instance.
+			Multiple class instances in use at the same time can result in corruption of data allocated by IDASim, due to multiple active instances of 
+			<a href="../idasim/mmu.html">IDASimMMU</a>.
+			If multiple instances of IDASim are necessary, care should be taken to ensure that the base addresses used for memory allocation by the various
+			instances of IDASimMMU are sufficiently different.
+			</p>
+
+			<hr />
+		</div>
+
+		<h1>Writing IDASimulator Handlers</h1>
+		<div id="handlers">
+			<p>
+			Although IDASimulator comes with a set of handlers for common library and API functions, its real power is the ability to easily
+			craft custom handlers for your target process.
+			</p>
+
+			<p>
+			IDASimulator handler files are installed to the plugins/idasimlib subdirectory of the IDA install path. Each handler file must have a .py 
+			file extension, and must contain at least one uniquely named class. The constructor for each class must accept one argument, which will be
+			an instance of the <a href="../idasim/idasim.html">IDASim</a> class:
+
+			<blockquote>
+			<pre>
+	<span class="gold">class</span> <span class="aqua">MyHandlerClass</span>:
+
+		<span class="gold">def</span> <span class="aqua">__init__</span>(self, idasim):
+			self.idasim = idasim
+			</pre>
+			</blockquote>
+			</p>
+
+			<p>
+			Every member of the class that does not start with an underscore will be loaded as a handler function:
+
+			<blockquote>
+			<pre>
+	<span class="gold">class</span> <span class="aqua">MyHandlerClass</span>:
+
+		<span class="gold">def</span> <span class="aqua">__init__</span>(self, idasim):
+			self.idasim = idasim
+
+		<span class="blue"># Handler for the function named 'strcpy'
+		# Writes a NULL-terminated string from src to the dst address.</span>
+		<span class="gold">def</span> <span class="aqua">strcpy</span>(self, dst, srcstr=<span class="red">''</span>):
+			<span class="red">'''
+			A test to simulate strcpy functionality.
+			'''</span>
+			idc.DbgWrite(dst, srcstr + <span class="red">"\x00"</span>)
+			return dst
+
+		<span class="blue"># Handler for the function named 'strdup'
+		# Returns a NULL-terminated string, which will be automatically allocated in memory</span>
+		<span class="gold">def</span> <span class="aqua">strdup</span>(self, src=<span class="red">''</span>):
+			return src + <span class="red">"\x00"</span>
+			</pre>
+			</blockquote>
+			</p>
+
+			<p>
+			If a handler accepts arguments, the appropriate arguments will be passed to the handler, just as they were passed to the
+			original function. For arguments that accept pointers to NULL-terminated strings, the default value may be defined as a string type. 
+			In this case, instead of being passed the raw argument value (the pointer to the string), the actual string value will be supplied.
+			</p>
+
+			<p>
+			Handlers can also access function arguments via the Architecture.Arguments method. 
+			An instance of the <a href="../idasim/architecture.html">Architecture</a> class is available through the cpu member of the IDASim class instance.
+			</p>
+
+			<p>
+			A handler can return an integer, string, None, or raise a JumpTo or GoTo exception. 
+			See the <a href="../idasim/index.html#handlers">IDASim</a> documentation for more details.
+			</p>
+
+			<p>
+			With the handlers written and the file placed in the idasimlib directory, refresh the IDASimulator window to load the new handlers (<em>Right Click -> Refresh</em>, or Ctl+U):
+			</p>
+
+			<p>
+			<img src="images/new_handler.png" />
+			</p>
+			<hr />
+		</div>
+	</body>
+</html>
+

@@ -1,0 +1,15 @@
+.purple { color: purple; }
+.green { color: green; }
+.red { color: red; }
+.blue { color: DarkBlue; }
+.aqua { color: DarkCyan; }
+.gold { color: DarkOrange; }
+
+body { width: 60%; margin-left: auto; margin-right: auto; }
+blockquote { font-weight: bold; }
+h1 { font-size: 20pt; }
+h2 { font-size: 14pt; }
+img { display: block; margin-left: auto; margin-right: auto; margin-top: 20px; margin-bottom: 25px; border: 1px solid black; }
+
+
+/* #usage p { margin-top: 20px; } */

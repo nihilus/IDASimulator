@@ -1,0 +1,72 @@
+<html>
+	<head>
+		<title>IDASimulator</title>
+		<link rel="stylesheet" type="text/css" href="css/style.css">
+	</head>
+
+	<body>
+
+		<h1>What?</h1>
+		<div id="intro">
+			<p>
+			IDASimulator is a plugin that extends IDA's conditional breakpoint support, making it easy to augment / replace complex executable code inside a debugged process with Python code.
+			</p>
+
+			<p>
+			Specifically, IDASimulator makes use of conditional breakpoints in the IDA debugger to hijack the execution flow of a process
+			and invoke Python handler functions whenever particular code blocks are executed. With support for multiple target architectures,
+			it handles details such as register initialization, memory allocation, pointers, function arguments and return values seamlessly 
+			and transparently, making it easy to replace, modify and subvert existing functionality (or lack thereof) in the target process.
+			</p>
+
+			<p>
+			IDASimulator also includes the IDASim python module, on which IDASimulator is based. This allows for all of the features of IDASimulator
+			to be integrated into more complex IDAPython scripts.
+			</p>
+
+			<p>
+			IDASimulator currently supports the x86, x86_64, ARM and MIPS32 architectures. <a href="idasim/index.html#porting">Porting</a> to other architectures is very easy.
+			</p>
+			<hr />
+		</div>
+
+		<h1>Why?</h1>
+		<div id="why">
+			<p>
+				The ability to dynamically intercept, replace or modify process logic is useful in a variety of situations, such as:
+
+				<ul>
+					<li>Monitoring function calls </li>
+					<li>Non-intrusive function hooking</li>
+					<li>Simulating library functions when emulating code snippets in IDA</li>
+					<li>Simulating hardware-dependant functionality (embedded firmware, custom hardware, unsupported ioctl's, etc)</li>
+					<li>Any situation where the application code does one thing and you want it to do something else</li>
+				</ul>
+			</p>
+			<hr />
+		</div>
+
+		<h1>How?</h1>
+		<div id="start">
+			<p>
+				For detailed usage of the IDASimulator plugin and the IDASim python module, see:
+				
+				<ul>
+					<li><a href="idasimulator/index.html#install">Installation</a></li>
+					<li><a href="idasim/index.html">IDASim User Guide</a></li>
+					<li><a href="idasimulator/index.html">IDASimulator User Guide</a></li>
+				</ul>
+			</p>
+			<hr />
+		</div>
+
+		<h1>License</h1>
+		<div id="copy">
+		<p>
+		This software is distributed Copyright (c) 2012, <a href="http://www.devttys0.com">Craig Heffner</a>, <a href="http://www.tacnetsol.com">Tactical Network Solutions</a>, under the <a href="http://www.opensource.org/licenses/MIT">MIT license</a>.
+		</p>
+
+		</div>
+	</body>
+</html>
+
